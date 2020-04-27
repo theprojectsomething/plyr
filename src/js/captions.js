@@ -107,7 +107,13 @@ const captions = {
     // Watch changes to textTracks and update captions menu
     if (this.isHTML5) {
       const trackEvents = this.config.captions.update ? 'addtrack removetrack' : 'removetrack';
-      on.call(this, this.media.textTracks, trackEvents, captions.update.bind(this));
+      // debounce track event listener
+	    // stops IO blocking where many tracks are added at once
+	    let timeout;
+	    on.call(this, this.media.textTracks, trackEvents, () => {
+	        clearTimeout(timeout);
+	        timeout = setTimeout(captions.update.bind(this));
+	    });
     }
 
     // Update available languages in list next tick (the event must not be triggered before the listeners)
