@@ -428,11 +428,21 @@ const controls = {
             if (event.which === 40 || (isRadioButton && event.which === 39)) {
               target = menuItem.nextElementSibling;
 
+              // iterate until visible target is found
+              while (target && !target.offsetParent) {
+                target = target.nextElementSibling;
+              }
+
               if (!is.element(target)) {
                 target = menuItem.parentNode.firstElementChild;
               }
             } else {
               target = menuItem.previousElementSibling;
+              
+              // iterate until visible target is found
+              while (target && !target.offsetParent) {
+                target = target.previousElementSibling;
+              }
 
               if (!is.element(target)) {
                 target = menuItem.parentNode.lastElementChild;
