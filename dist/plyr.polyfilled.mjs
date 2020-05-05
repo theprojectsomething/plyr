@@ -4205,7 +4205,7 @@ function _unsupportedIterableToArray(o, minLen) {
   if (typeof o === "string") return _arrayLikeToArray(o, minLen);
   var n = Object.prototype.toString.call(o).slice(8, -1);
   if (n === "Object" && o.constructor) n = o.constructor.name;
-  if (n === "Map" || n === "Set") return Array.from(n);
+  if (n === "Map" || n === "Set") return Array.from(o);
   if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
 }
 
@@ -7314,7 +7314,7 @@ function triggerEvent(element) {
 
   var event = new CustomEvent(type, {
     bubbles: bubbles,
-    detail: _objectSpread2({}, detail, {
+    detail: _objectSpread2(_objectSpread2({}, detail), {}, {
       plyr: this
     })
   }); // Dispatch the event
@@ -8101,7 +8101,7 @@ var controls = {
     var attr = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
     var text = i18n.get(key, this.config);
 
-    var attributes = _objectSpread2({}, attr, {
+    var attributes = _objectSpread2(_objectSpread2({}, attr), {}, {
       class: [attr.class, this.config.classNames.hidden].filter(Boolean).join(' ')
     });
 
@@ -9101,7 +9101,7 @@ var controls = {
         showMenuPanel = controls.showMenuPanel;
     this.elements.controls = null; // Larger overlaid play button
 
-    if (this.config.controls.includes('play-large')) {
+    if (is$1.array(this.config.controls) && this.config.controls.includes('play-large')) {
       this.elements.container.appendChild(createButton.call(this, 'play-large'));
     } // Create the container
 
@@ -9113,7 +9113,7 @@ var controls = {
       class: 'plyr__controls__item'
     }; // Loop through controls in order
 
-    dedupe(this.config.controls).forEach(function (control) {
+    dedupe(is$1.array(this.config.controls) ? this.config.controls : []).forEach(function (control) {
       // Restart button
       if (control === 'restart') {
         container.appendChild(createButton.call(_this10, 'restart', defaultAttributes));
@@ -9432,8 +9432,6 @@ var controls = {
     if (update) {
       if (is$1.string(this.config.controls)) {
         container = replace(container);
-      } else if (is$1.element(container)) {
-        container.innerHTML = replace(container.innerHTML);
       }
     } // Controls container
 
@@ -9971,7 +9969,7 @@ var defaults$1 = {
   // Sprite (for icons)
   loadSprite: true,
   iconPrefix: 'plyr',
-  iconUrl: 'https://cdn.plyr.io/3.5.10/plyr.svg',
+  iconUrl: 'https://cdn.plyr.io/3.6.1/plyr.svg',
   // Blank video (used to prevent errors on source change)
   blankVideo: 'https://cdn.plyr.io/static/blank.mp4',
   // Quality default
@@ -10418,10 +10416,12 @@ var Fullscreen = /*#__PURE__*/function () {
 
       if (is$1.element(button)) {
         button.pressed = this.active;
-      } // Trigger an event
+      } // Always trigger events on the plyr / media element (not a fullscreen container) and let them bubble up
 
 
-      triggerEvent.call(this.player, this.target, this.active ? 'enterfullscreen' : 'exitfullscreen', true);
+      var target = this.target === this.player.media ? this.target : this.player.elements.container; // Trigger an event
+
+      triggerEvent.call(this.player, target, this.active ? 'enterfullscreen' : 'exitfullscreen', true);
     }
   }, {
     key: "toggleFallback",
@@ -10900,7 +10900,7 @@ var ui = {
     // Loop through values (as they are the keys when the object is spread 🤔)
     Object.values(_objectSpread2({}, this.media.style)) // We're only fussed about Plyr specific properties
     .filter(function (key) {
-      return key.startsWith('--plyr');
+      return !is$1.empty(key) && key.startsWith('--plyr');
     }).forEach(function (key) {
       // Set on the container
       _this5.elements.container.style.setProperty(key, _this5.media.style.getPropertyValue(key)); // Clean up from media element
@@ -14920,7 +14920,7 @@ var Plyr = /*#__PURE__*/function () {
 
         var hiding = toggleClass(this.elements.container, this.config.classNames.hideControls, force); // Close menu
 
-        if (hiding && this.config.controls.includes('settings') && !is$1.empty(this.config.settings)) {
+        if (hiding && is$1.array(this.config.controls) && this.config.controls.includes('settings') && !is$1.empty(this.config.settings)) {
           controls.toggleMenu.call(this, false);
         } // Trigger event on change
 
